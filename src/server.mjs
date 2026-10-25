@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { validateCatalogue, queryTracks, audioUrl } from './catalogue.mjs';
 import { studioRequest, StudioUnavailable } from './studio.mjs';
+import { ensureStudio } from './session.mjs';
 export function createApi(catalogue, { resolve = async id => {
   const data = await studioRequest('get_tracks', { trackIds: [id] });
   return data.tracks.find(t => t.trackId === id)?.streamingAudioUrl;
@@ -54,5 +55,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const catalogue = JSON.parse(await readFile(new URL('../data/catalogue.json', import.meta.url), 'utf8'));
   const port = Number(process.env.PORT ?? 8917);
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Invalid PORT');
-  createApi(catalogue).listen(port, '127.0.0.1', () => console.log(`Clovercut Audio API: http://127.0.0.1:${port}`));
+  createApi(catalogue).listen(port, '127.0.0.1', () => {
+    console.log(`Clovercut Audio API: http://127.0.0.1:${port}`);
+    ensureStudio().then(() => console.log('Studio session ready in the background.')).catch(() => console.log('Studio sign-in is needed. Run npm run login once.'));
+  });
 }

@@ -65,5 +65,9 @@ export function audioUrl(value, now = Date.now()) {
       url.pathname !== '/videoplayback') throw Error('Unexpected audio source');
   const expires = Number(url.searchParams.get('expire'));
   if (!Number.isFinite(expires) || expires * 1000 <= now + 60_000) throw Error('Audio URL expired or near expiry');
+  // Google streams may stall on an unbounded request. Use the exact declared
+  // file range so native preview/import can finish downloading the whole MP3.
+  const length = Number(url.searchParams.get('clen'));
+  if (Number.isSafeInteger(length) && length > 0 && length <= 512 * 1024 * 1024) url.searchParams.set('range', `0-${length - 1}`);
   return { url: url.href, expiresAt: expires * 1000 };
 }

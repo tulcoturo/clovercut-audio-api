@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-export async function connect() {
+export async function connect({ allowStudioHome = false, allowLogin = false } = {}) {
   const response = await fetch('http://127.0.0.1:9223/json/list', { signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw Error('Studio browser is unavailable');
   const pages = await response.json();
-  const page = pages.find(p => p.type === 'page' && p.url.startsWith('https://studio.youtube.com/channel/') && /\/music(?:[/?#]|$)/.test(p.url) && !/^(Ups!|Oops)/i.test(p.title));
+  const studio = pages.filter(p => p.type === 'page' && p.url.startsWith('https://studio.youtube.com/') && !/^(Ups!|Oops)/i.test(p.title));
+  const page = studio.find(p => /\/music(?:[/?#]|$)/.test(p.url)) ?? (allowStudioHome ? studio[0] : undefined) ?? (allowLogin ? pages.find(p => p.type === 'page' && p.url.startsWith('https://accounts.google.com/')) : undefined);
   if (!page) throw Error('The authenticated Audio Library tab is unavailable');
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
@@ -21,6 +22,7 @@ export async function connect() {
     m.error ? p.reject(Error(m.error.message)) : p.resolve(m.result);
   };
   return {
+    pageUrl: page.url,
     call(method, params = {}) {
       return new Promise((resolve, reject) => {
         const id = ++next;

@@ -78,3 +78,10 @@ test('catalogue browsing works offline while unavailable playback is explicit', 
     assert.equal((await response.json()).error,'Reconnect Studio');
   });
 });
+
+test('bounds complete MP3 downloads by declared length without losing the signature', () => {
+  const u = new URL(audioUrl(signed(1000) + '&clen=4577944', 0).url);
+  assert.equal(u.searchParams.get('range'), '0-4577943');
+  assert.equal(u.searchParams.get('sig'), 'synthetic-test-only');
+  for (const size of ['0','-1','NaN','1.5','999999999999']) assert.equal(new URL(audioUrl(signed(1000) + '&clen=' + size, 0).url).searchParams.has('range'), false);
+});
