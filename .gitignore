@@ -1,0 +1,5 @@
+data/*
+!data/.gitkeep
+research/
+node_modules/
+*.log
