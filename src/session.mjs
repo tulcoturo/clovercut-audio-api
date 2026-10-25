@@ -20,8 +20,8 @@ export async function browserPath() {
 export async function startBrowser({ visible = false } = {}) {
   const profile = profilePath();
   await mkdir(profile, { recursive: true, mode: 0o700 });
-  const args = [`--user-data-dir=${profile}`, '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=9223', '--no-first-run', '--no-default-browser-check', '--enable-automation'];
-  if (!visible) args.push('--headless=new', '--disable-gpu');
+  const args = [`--user-data-dir=${profile}`, '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=9223', '--no-first-run', '--no-default-browser-check'];
+  if (!visible) args.push('--headless=new', '--disable-gpu', '--enable-automation');
   args.push('https://studio.youtube.com');
   const child = spawn(await browserPath(), args, { stdio: 'ignore', windowsHide: !visible });
   await new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); });
