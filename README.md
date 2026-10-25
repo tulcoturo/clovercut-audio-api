@@ -92,8 +92,9 @@ The local catalogue and research artifacts are excluded from Git.
 
 The Studio calls are internal (`creator_music/list_tracks` and `get_tracks`),
 not a supported public YouTube Data API contract. A change to Studio may require
-updating the connector. Hosting, unattended renewal, and integration into the
-desktop provider remain follow-up work; do not expose the debug port or this
+updating the connector. The Clovercut desktop provider now integrates music and sound effects through
+this API, including search, pagination, licence information and credit copying.
+Hosting and unattended renewal remain follow-up work; do not expose the debug port or this
 local development server publicly.
 
 ## Verification
