@@ -85,3 +85,31 @@ test('bounds complete MP3 downloads by declared length without losing the signat
   assert.equal(u.searchParams.get('sig'), 'synthetic-test-only');
   for (const size of ['0','-1','NaN','1.5','999999999999']) assert.equal(new URL(audioUrl(signed(1000) + '&clen=' + size, 0).url).searchParams.has('range'), false);
 });
+
+test('interactive sign-in requires an explicit desktop POST and rejects unrelated origins', async () => {
+  let opens = 0;
+  await withApi({login: async () => { opens++; }}, async base => {
+    assert.equal((await fetch(base+'/v1/session/login')).status,404);
+    assert.equal((await fetch(base+'/v1/session/login',{method:'POST'})).status,403);
+    assert.equal((await fetch(base+'/v1/session/login',{method:'POST',headers:{'X-Clovercut-Client':'desktop',Origin:'https://unrelated.example'}})).status,403);
+    assert.equal(opens,0);
+    const response=await fetch(base+'/v1/session/login',{method:'POST',headers:{'X-Clovercut-Client':'desktop'}});
+    assert.equal(response.status,200);assert.equal(opens,1);
+  });
+});
+
+test('first-use catalogue loads locally after authentication and preserves HTTP responsiveness', async () => {
+  let done, loads = 0;
+  const server=createApi(null,{load:()=>{loads++;return new Promise(resolve=>{done=resolve;});}});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const base=`http://127.0.0.1:${server.address().port}`;
+  try {
+    assert.equal((await (await fetch(base+'/health')).json()).ready,false);
+    assert.equal((await fetch(base+'/v1/tracks')).status,503);
+    assert.equal((await fetch(base+'/v1/tracks')).status,503);
+    assert.equal(loads,1);
+    done(catalogue);await new Promise(resolve=>setTimeout(resolve,0));
+    assert.equal((await (await fetch(base+'/health')).json()).ready,true);
+    assert.equal((await (await fetch(base+'/v1/tracks')).json()).total,2);
+  } finally {await new Promise(resolve=>server.close(resolve));}
+});

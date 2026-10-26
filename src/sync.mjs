@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { mkdir, writeFile, rename } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { resolve as resolvePath } from 'node:path';
+const catalogueFile = () => process.env.CLOVERCUT_AUDIO_DATA ? pathToFileURL(resolvePath(process.env.CLOVERCUT_AUDIO_DATA, 'catalogue.json')) : new URL('../data/catalogue.json', import.meta.url);
 import { studioRequest } from './studio.mjs';
 import { normalizeTrack, validateCatalogue } from './catalogue.mjs';
 export async function collectCatalogue(request = studioRequest, report = () => {}) {
@@ -27,7 +29,7 @@ export async function collectCatalogue(request = studioRequest, report = () => {
   }
   return validateCatalogue({ version: 1, updatedAt: new Date().toISOString(), counts, tracks: all });
 }
-export async function saveCatalogue(catalogue, file = new URL('../data/catalogue.json', import.meta.url)) {
+export async function saveCatalogue(catalogue, file = catalogueFile()) {
   await mkdir(new URL('.', file), { recursive: true });
   const temp = new URL(file.href + '.tmp');
   await writeFile(temp, JSON.stringify(catalogue, null, 2) + '\n', { mode: 0o600 });

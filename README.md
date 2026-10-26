@@ -56,9 +56,17 @@ Authentication stays in the browser; this project does not read cookies,
 export login headers, or store credentials in its catalogue. The API exposes
 read operations only and rejects unrelated browser origins and Host headers.
 
+The desktop client can start the connector with no catalogue yet. Its first
+catalogue request begins a background collection after Studio sign-in; requests
+return 503 until it is ready, while `/health` remains responsive. Set
+`CLOVERCUT_AUDIO_DATA` to keep the private catalogue outside the source directory.
+The catalogue is saved atomically and never includes streaming signatures or
+browser credentials.
+
 ## Endpoints
 
-- `GET /health`: catalogue timestamp and counts.
+- `GET /health`: readiness, catalogue timestamp and counts.
+- `POST /v1/session/login`: open the dedicated Studio sign-in browser; requires `X-Clovercut-Client: desktop` and the same localhost/origin checks. No cross-origin preflight is allowed.
 - `GET /v1/tracks`: search and pagination.
 - `GET /v1/facets?type=sound-effect`: categories, genres, moods and instruments.
 - `GET /v1/tracks/:id`: metadata and licence information.
